@@ -76,6 +76,7 @@ let countriesList: HTMLElement;
  */
 function initializeElements(): void {
   searchInput = getRequiredElement<HTMLInputElement>('#searchInput');
+  regionFilter = getRequiredElement<HTMLSelectElement>('#regionFilter');
   searchButton = getRequiredElement<HTMLButtonElement>('#searchButton');
   retryButton = getRequiredElement<HTMLButtonElement>('#retryButton');
   loadingState = getRequiredElement<HTMLElement>('#loadingState');
@@ -84,6 +85,30 @@ function initializeElements(): void {
   emptyState = getRequiredElement<HTMLElement>('#emptyState');
   noResultsState = getRequiredElement<HTMLElement>('#noResultsState');
   countriesList = getRequiredElement<HTMLElement>('#countriesList');
+}
+
+/**
+ * Obtiene todos los países, extrae las regiones únicas y las agrega al dropdown.
+ */
+async function populateRegions(): Promise<void> {
+  try {
+    const countries = await getAllCountries();
+    
+    // Aquí se extraen las regiones, elimina los duplicados usando Set y ordena alfabéticamente.
+    const uniqueRegions = Array.from(new Set(countries.map(c => c.region)))
+      .filter(region => region) // Se filtra por si hay algún país sin región definida.
+      .sort();
+
+    // Crea una opción HTML por cada región y la inserta en el select.
+    uniqueRegions.forEach(region => {
+      const option = document.createElement('option');
+      option.value = region;
+      option.textContent = region;
+      regionFilter.appendChild(option);
+    });
+  } catch (error) {
+    console.error('Error al poblar las regiones:', error);
+  }
 }
 
 // =============================================================================
