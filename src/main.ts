@@ -35,9 +35,9 @@ import { renderCountryList } from './components/CountryCard';
 import { openModal } from './components/CountryModal';
 import { getRequiredElement, showElement, hideElement, onDOMReady, debounce } from './utils/dom';
 // Agregue getAllCountries a la importación desde countryApi.
-import { searchCountries, getCountriesByRegion, ApiError } from './services/countryApi';
+import { searchCountries, getCountriesByRegion, getCountryByCode, ApiError } from './services/countryApi';
 // Agregue esta importación para saber si el país es favorito o no.
-import { isFavorite } from './utils/storage';
+import { isFavorite, getFavorites } from './utils/storage';
 
 // =============================================================================
 // ESTADO DE LA APLICACIÓN
@@ -80,7 +80,7 @@ let countriesList: HTMLElement;
 function initializeElements(): void {
   searchInput = getRequiredElement<HTMLInputElement>('#searchInput');
   regionFilter = getRequiredElement<HTMLSelectElement>('#regionFilter');
-  favoritesToggle = getRequiredElement<HTMLInputElement>('#regionFilter');
+  favoritesToggle = getRequiredElement<HTMLInputElement>('#favoritesToggle');
   searchButton = getRequiredElement<HTMLButtonElement>('#searchButton');
   retryButton = getRequiredElement<HTMLButtonElement>('#retryButton');
   loadingState = getRequiredElement<HTMLElement>('#loadingState');
@@ -203,14 +203,17 @@ function render(state: UiState): void {
 async function handleSearch(): Promise<void> {
   const query = searchInput.value.trim();
   const selectedRegion = regionFilter.value;
+  const showFavorites = favoritesToggle.checked;
 
-  if (query.length === 0 && selectedRegion === '') {
+  // 1. Si TODO está vacío (incluyendo el switch apagado), volvemos a inicio
+  if (query.length === 0 && selectedRegion === '' && !showFavorites) {
     render({ status: 'idle' });
     lastSearchQuery = '';
     return;
   }
 
-  const currentSearchKey = `${query}-${selectedRegion}`;
+  // 2. Clave de búsqueda (ahora incluimos el estado del toggle para evitar repeticiones)
+  const currentSearchKey = `${query}-${selectedRegion}-${showFavorites}`;
   if (currentSearchKey === lastSearchQuery && currentState.status === 'success') {
     return;
   }
@@ -221,26 +224,37 @@ async function handleSearch(): Promise<void> {
   try {
     let countries: Country[] = [];
 
+    // 3. Obtenemos los países base según los filtros activos
     if (query.length > 0) {
-      // 1. Si hay texto, buscamos por nombre en la API
+      // Búsqueda por texto
       countries = await searchCountries(query);
-      
-      // Y si el usuario también seleccionó una región, filtramos localmente
       if (selectedRegion !== '') {
         countries = countries.filter(country => country.region === selectedRegion);
       }
     } else if (selectedRegion !== '') {
-      // 2. Si SOLO hay región (no hay texto), usamos el endpoint específico de región
-      // Hacemos el cast "as any" porque el select devuelve un string genérico
+      // Búsqueda por región
       countries = await getCountriesByRegion(selectedRegion as any);
+    } else if (showFavorites) {
+      // NUEVO: Si no hay texto ni región, pero el switch está ON
+      // Obtenemos los códigos guardados y hacemos fetch de cada país
+      const favCodes = getFavorites();
+      if (favCodes.length === 0) {
+        render({ status: 'empty' });
+        return;
+      }
+      
+      const promises = favCodes.map(code => getCountryByCode(code));
+      const results = await Promise.all(promises);
+      // Filtramos nulos por seguridad y hacemos el cast
+      countries = results.filter(c => c !== null) as Country[];
     }
 
-    // Nuevo: Este filtro adicional de Favoritos.
-    // Si el checkbox está marcado, filtramos la lista para dejar solo los favoritos.
-    if (favoritesToggle.checked) {
+    // 4. Si el switch está ON y había texto/región, filtramos esa lista
+    if (showFavorites && (query.length > 0 || selectedRegion !== '')) {
       countries = countries.filter(country => isFavorite(country.cca3));
     }
 
+    // 5. Renderizado final
     if (countries.length === 0) {
       render({ status: 'empty' });
     } else {
