@@ -37,7 +37,7 @@ import { getRequiredElement, showElement, hideElement, onDOMReady, debounce } fr
 // Agregue getAllCountries a la importación desde countryApi.
 import { searchCountries, getCountriesByRegion, getCountryByCode, ApiError } from './services/countryApi';
 // Agregue esta importación para saber si el país es favorito o no.
-import { isFavorite, getFavorites } from './utils/storage';
+import { isFavorite, getFavorites, clearFavorites } from './utils/storage';
 
 // =============================================================================
 // ESTADO DE LA APLICACIÓN
@@ -64,6 +64,8 @@ let searchInput: HTMLInputElement;
 let regionFilter: HTMLSelectElement;
 // Nueva variable para los favoritos.
 let favoritesToggle: HTMLInputElement; 
+// Nueva variable para eliminar favoritos.
+let clearFavoritesBtn: HTMLButtonElement;
 let searchButton: HTMLButtonElement;
 let retryButton: HTMLButtonElement;
 let loadingState: HTMLElement;
@@ -80,6 +82,7 @@ let countriesList: HTMLElement;
 function initializeElements(): void {
   searchInput = getRequiredElement<HTMLInputElement>('#searchInput');
   regionFilter = getRequiredElement<HTMLSelectElement>('#regionFilter');
+  clearFavoritesBtn = getRequiredElement<HTMLButtonElement>('#clearFavoritesBtn');
   favoritesToggle = getRequiredElement<HTMLInputElement>('#favoritesToggle');
   searchButton = getRequiredElement<HTMLButtonElement>('#searchButton');
   retryButton = getRequiredElement<HTMLButtonElement>('#retryButton');
@@ -334,6 +337,20 @@ function setupEventListeners(): void {
 
   // Nuevo: Escucha los cambios en el checkbox de favoritos.
   favoritesToggle.addEventListener('change', () => {
+    void handleSearch();
+  });
+
+  // Nuevo: Escucha el botón de limpiar favoritos.
+  clearFavoritesBtn.addEventListener('click', () => {
+    // 1. Borra los datos del storage.
+    clearFavorites();
+    
+    // 2. Apaga el switch visualmente si estaba encendido.
+    if (favoritesToggle.checked) {
+      favoritesToggle.checked = false;
+    }
+    
+    // 3. Vuelve a renderizar la vista (vuelve a la pantalla inicial).
     void handleSearch();
   });
 }

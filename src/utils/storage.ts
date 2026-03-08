@@ -57,3 +57,14 @@ export function toggleFavorite(countryCode: string): boolean {
 export function isFavorite(countryCode: string): boolean {
   return getFavorites().includes(countryCode);
 }
+
+/**
+ * Elimina todos los favoritos del localStorage.
+ */
+export function clearFavorites(): void {
+  try {
+    localStorage.removeItem(FAVORITES_KEY);
+  } catch (error) {
+    console.error('Error al limpiar favoritos:', error);
+  }
+}
