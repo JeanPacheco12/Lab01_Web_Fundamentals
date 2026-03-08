@@ -15,6 +15,8 @@
 import type { Country } from '../types/country';
 import { formatNumber, formatCapitals } from '../utils/format';
 import { createElement } from '../utils/dom';
+// Importación nueva: Aquí importamos las funciones para gestionar favoritos.
+import { isFavorite, toggleFavorite } from '../utils/storage';
 
 /**
  * Crea una tarjeta de país para mostrar en la lista.
@@ -58,17 +60,33 @@ export function createCountryCard(
   // =========================================================================
   card.innerHTML = `
     <div class="relative">
-      <!-- Bandera del país -->
       <img
         src="${country.flags.svg}"
         alt="${country.flags.alt ?? `Bandera de ${country.name.common}`}"
         class="w-full h-48 object-cover"
         loading="lazy"
       />
-      <!-- Badge de región -->
-      <span class="absolute top-3 right-3 px-3 py-1 bg-slate-900/80 text-slate-200 text-xs font-medium rounded-full backdrop-blur-sm">
-        ${country.region}
-      </span>
+      
+      <div class="absolute top-3 right-3 flex gap-2">
+        <span class="px-3 py-1 bg-slate-900/80 text-slate-200 text-xs font-medium rounded-full backdrop-blur-sm">
+          ${country.region}
+        </span>
+        
+        <button 
+          class="favorite-btn p-1.5 bg-slate-900/80 text-slate-200 rounded-full backdrop-blur-sm hover:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+          data-code="${country.cca3}"
+          aria-label="${isFavorite(country.cca3) ? 'Quitar de favoritos' : 'Añadir a favoritos'}"
+        >
+          <svg 
+            class="w-5 h-5 transition-colors ${isFavorite(country.cca3) ? 'text-red-500 fill-current' : 'text-slate-200'}" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <div class="p-5">
