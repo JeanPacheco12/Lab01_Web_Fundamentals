@@ -35,6 +35,8 @@ import { searchCountries, ApiError } from './services/countryApi';
 import { renderCountryList } from './components/CountryCard';
 import { openModal } from './components/CountryModal';
 import { getRequiredElement, showElement, hideElement, onDOMReady, debounce } from './utils/dom';
+// Agrega getAllCountries a la importación desde countryApi.
+import { searchCountries, getAllCountries, ApiError } from './services/countryApi';
 
 // =============================================================================
 // ESTADO DE LA APLICACIÓN
@@ -57,6 +59,8 @@ let lastSearchQuery = '';
 // =============================================================================
 
 let searchInput: HTMLInputElement;
+// Nueva variable para el filtro.
+let regionFilter: HTMLSelectElement;
 let searchButton: HTMLButtonElement;
 let retryButton: HTMLButtonElement;
 let loadingState: HTMLElement;
