@@ -24,4 +24,4 @@ Esta aplicación web desarrollada para el curso de Fundamentos de Aplicaciones W
 ---
 
 **Link del video explicativo del laboratorio:**
-[]
+[https://youtu.be/MuObwAilEhQ]
